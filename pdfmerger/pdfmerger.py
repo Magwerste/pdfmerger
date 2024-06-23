@@ -3,11 +3,13 @@ import sys
 import os
 
 def get_pdf_files():
+    # List all PDF files in the current directory
     pdf_files = [f for f in os.listdir() if f.endswith('.pdf')]
     if not pdf_files:
         print("No PDF files found in the current directory.")
         return []
     
+    # Display available PDF files and let user select
     print("Available PDF files:")
     for i, file in enumerate(pdf_files, 1):
         print(f"{i}. {file}")
@@ -17,11 +19,13 @@ def get_pdf_files():
     return [pdf_files[i] for i in selected_indices if 0 <= i < len(pdf_files)]
 
 def get_page_range(file_name):
+    # Get user input for page range
     while True:
         range_input = input(f"Enter page range for {file_name} (e.g., '1-5' or '1,3,5-7' or 'all'): ").lower()
         if range_input == 'all':
             return None
         try:
+            # Parse page range input
             pages = set()
             for part in range_input.split(','):
                 if '-' in part:
@@ -36,6 +40,7 @@ def get_page_range(file_name):
 def merge_pdfs(files):
     merger = PyPDF2.PdfMerger()
     for file in files:
+        # Get page range for each file and append to merger
         page_range = get_page_range(file)
         if page_range is None:
             merger.append(file)
@@ -44,6 +49,7 @@ def merge_pdfs(files):
                 pdf = PyPDF2.PdfReader(f)
                 merger.append(file, pages=page_range)
     
+    # Get output file name and write merged PDF
     output_name = input("Enter the name for the merged PDF (default: 'combined.pdf'): ")
     if not output_name:
         output_name = 'combined.pdf'
@@ -55,6 +61,7 @@ def merge_pdfs(files):
     print(f"PDFs merged successfully into {output_name}")
 
 if __name__ == "__main__":
+    # Main execution flow
     files_to_merge = get_pdf_files()
     if files_to_merge:
         merge_pdfs(files_to_merge)
