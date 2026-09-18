@@ -9,6 +9,7 @@ from .document import PDFDocument
 from .merger import MergeEntry, PDFMergerService
 from .page_range import InvalidPageRangeError, PageRange
 from .scanner import PDFFileScanner
+from .splitter import PDFSplitterService
 
 
 class ConsoleUI:
@@ -111,7 +112,75 @@ def build_arg_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def build_split_arg_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        prog="pdfmerger split",
+        description="Split a PDF file into multiple output files.",
+    )
+    parser.add_argument("file", help="PDF file to split.")
+    parser.add_argument(
+        "-r",
+        "--range",
+        dest="ranges",
+        action="append",
+        metavar="RANGE",
+        help=(
+            "A page range for one output file, e.g. '1-3' or '1,3,5-7'. "
+            "Repeat this flag once per output file. Cannot be combined with --every."
+        ),
+    )
+    parser.add_argument(
+        "--every",
+        type=int,
+        metavar="N",
+        help="Split into consecutive chunks of N pages each. Cannot be combined with --range.",
+    )
+    parser.add_argument(
+        "-o",
+        "--output-dir",
+        default=".",
+        help="Directory to write the split files into (default: current directory).",
+    )
+    parser.add_argument(
+        "-d",
+        "--directory",
+        default=".",
+        help="Directory to resolve the input file against (default: current directory).",
+    )
+    return parser
+
+
+def _run_split(argv: List[str]) -> int:
+    parser = build_split_arg_parser()
+    args = parser.parse_args(argv)
+
+    if bool(args.ranges) == bool(args.every):
+        print("Error: specify exactly one of --range or --every", file=sys.stderr)
+        return 1
+
+    try:
+        document = PDFDocument(Path(args.directory) / args.file)
+        splitter = PDFSplitterService()
+        if args.every:
+            outputs = splitter.split_every_n_pages(document, args.every, args.output_dir)
+        else:
+            ranges = [PageRange.parse(text) for text in args.ranges]
+            outputs = splitter.split_by_ranges(document, ranges, args.output_dir)
+    except (InvalidPageRangeError, FileNotFoundError, ValueError) as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 1
+
+    for output in outputs:
+        print(f"Wrote {output}")
+    return 0
+
+
 def main(argv: Optional[List[str]] = None) -> int:
+    argv = sys.argv[1:] if argv is None else list(argv)
+
+    if argv and argv[0] == "split":
+        return _run_split(argv[1:])
+
     parser = build_arg_parser()
     args = parser.parse_args(argv)
     directory = Path(args.directory)

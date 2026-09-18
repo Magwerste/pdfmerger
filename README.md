@@ -58,6 +58,30 @@ Options:
 | `-o`, `--output` | Output filename (default: `combined.pdf`) |
 | `-d`, `--directory` | Directory to resolve input/output files against (default: current directory) |
 
+### Splitting a PDF
+
+Use the `split` subcommand to break one PDF into several files, either by
+explicit page ranges or into fixed-size chunks:
+
+```bash
+python -m pdfmerger split report.pdf -r 1-3 -r 4-6 -r 7-10 -o parts/
+python -m pdfmerger split report.pdf --every 5 -o parts/
+```
+
+The first example writes `parts/report_part1.pdf` (pages 1-3),
+`parts/report_part2.pdf` (pages 4-6), and `parts/report_part3.pdf`
+(pages 7-10). The second splits the document into consecutive 5-page
+chunks. `--range`/`-r` and `--every` are mutually exclusive.
+
+Options:
+
+| Flag | Description |
+| --- | --- |
+| `-r`, `--range` | A page range for one output file (repeatable) |
+| `--every` | Split into consecutive chunks of N pages each |
+| `-o`, `--output-dir` | Directory to write the split files into (default: current directory) |
+| `-d`, `--directory` | Directory to resolve the input file against (default: current directory) |
+
 ## Project structure
 
 The tool is organized as a small set of single-responsibility classes rather
@@ -70,6 +94,8 @@ than one monolithic script, laid out under `src/pdfmerger/`:
 - `PDFFileScanner` (`scanner.py`) discovers PDF files in a directory.
 - `PDFMergerService` (`merger.py`) performs the actual merge given a list of
   documents and the pages to take from each.
+- `PDFSplitterService` (`splitter.py`) splits a document into multiple
+  output files, either by explicit page ranges or into fixed-size chunks.
 - `ConsoleUI` and `main` (`cli.py`) wire the above classes together into the
   interactive and command-line interfaces.
 
