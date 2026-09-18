@@ -114,3 +114,9 @@ pytest
 This project started as a first-year university exercise for learning
 Python. It has since been rewritten with a proper object-oriented design,
 a scriptable CLI, and test coverage.
+
+## Acknowledgments
+
+All PDF reading and writing is done via [pypdf](https://github.com/py-pdf/pypdf),
+maintained by Martin Thoma and the py-pdf community. This project is just a
+thin, task-specific CLI on top of their work.
